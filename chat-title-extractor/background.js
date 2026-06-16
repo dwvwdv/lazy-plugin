@@ -32,19 +32,23 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     doSync().then(sendResponse);
     return true;
   }
-  if (msg.type === 'SIGN_IN') {
-    signInWithGoogle().then(sendResponse).catch(e => sendResponse({ error: e.message }));
-    return true;
-  }
-  if (msg.type === 'SIGN_OUT') {
-    signOut().then(() => sendResponse({}));
-    return true;
-  }
+  // -- 登入功能暫時停用（測試階段）--
+  // if (msg.type === 'SIGN_IN') {
+  //   signInWithGoogle().then(sendResponse).catch(e => sendResponse({ error: e.message }));
+  //   return true;
+  // }
+  // if (msg.type === 'SIGN_OUT') {
+  //   signOut().then(() => sendResponse({}));
+  //   return true;
+  // }
   if (msg.type === 'RESET_SETTINGS') {
     resetAllSettings().then(() => sendResponse({}));
     return true;
   }
 });
+
+// -- 測試用：不需登入，直接用 anon key 送出（RLS 需另外調整才能實際寫入）--
+const DEV_USER_ID = '00000000-0000-0000-0000-000000000000';
 
 // ─── Supabase REST helper（帶 schema header）──────────────────────────────────
 function makeHeaders(accessToken) {
@@ -125,8 +129,9 @@ async function signOut() {
 
 // ─── Sync ──────────────────────────────────────────────────────────────────────
 async function doSync() {
-  const session = await getSession();
-  if (!session?.user) return { error: '尚未登入' };
+  // -- 測試階段：略過登入，直接用 anon key --
+  // const session = await getSession();
+  // if (!session?.user) return { error: '尚未登入' };
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab) return { error: '無活動頁面' };
@@ -175,13 +180,15 @@ async function doSync() {
   if (!chats.length) return { error: '未提取到任何對話', count: 0 };
 
   const uuid  = await getExtensionUUID();
-  const user  = session.user;
+  // -- 測試階段：用 DEV_USER_ID + SUPABASE_ANON 取代真實 session --
+  // const user  = session.user;
+  // const token = session.access_token;
   const now   = new Date().toISOString();
-  const token = session.access_token;
+  const token = SUPABASE_ANON;
 
   try {
     const rows = chats.map(c => ({
-      user_id:        user.id,
+      user_id:        DEV_USER_ID,
       extension_uuid: uuid,
       platform:       matched.key,
       title:          c.title,
@@ -192,7 +199,7 @@ async function doSync() {
     await upsert('chat_records', rows, 'user_id,platform,url', token);
 
     await upsert('sync_status', [{
-      user_id:        user.id,
+      user_id:        DEV_USER_ID,
       platform:       matched.key,
       last_synced_at: now,
     }], 'user_id,platform', token);
