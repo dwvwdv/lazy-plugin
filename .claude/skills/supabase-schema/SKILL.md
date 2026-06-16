@@ -95,7 +95,7 @@ supabase/
 ## 新增 App Checklist
 
 ```
-□ 執行 1_create_schema.sql
+□ 執行 1_create_schema.sql（含 GRANT USAGE + GRANT ON TABLES）
 □ 執行 2_create_tables.sql
 □ 執行 3_rls_policies.sql
 □ Dashboard → Exposed Schemas 加入新 schema
@@ -120,3 +120,7 @@ supabase/
 **Q：schema 需要改名**
 → `ALTER SCHEMA old_name RENAME TO new_name;`
 → 同步更新 Exposed Schemas 設定和 client 初始化
+
+**Q：有 RLS policy 但 query 回 empty / permission denied**
+→ 確認 `1_create_schema.sql` 有執行 `GRANT USAGE ON SCHEMA` 和 `GRANT ... ON ALL TABLES`
+→ 自訂 schema 預設不繼承 public 的 role 權限，兩層都要明確授予
