@@ -41,25 +41,15 @@ async function getSession() {
   return supabaseSession || null;
 }
 
+// -- 測試階段：略過登入，直接顯示為 online --
 async function refreshAuthUI() {
-  const session = await getSession();
-  const user = session?.user;
-  if (user) {
-    $('loggedOut').style.display = 'none';
-    $('loggedIn').style.display  = 'block';
-    $('userEmail').textContent    = user.email || user.id;
-    $('btnSync').disabled         = false;
-    $('headerStatus').textContent = 'online';
-    $('headerStatus').className   = 'badge online';
-    $('aboutUID').textContent     = user.id;
-  } else {
-    $('loggedOut').style.display = 'block';
-    $('loggedIn').style.display  = 'none';
-    $('btnSync').disabled         = true;
-    $('headerStatus').textContent = 'offline';
-    $('headerStatus').className   = 'badge offline';
-    $('aboutUID').textContent     = '—';
-  }
+  $('loggedOut').style.display = 'none';
+  $('loggedIn').style.display  = 'block';
+  $('userEmail').textContent    = 'dev-mode (no login)';
+  $('btnSync').disabled         = false;
+  $('headerStatus').textContent = 'dev';
+  $('headerStatus').className   = 'badge online';
+  $('aboutUID').textContent     = '00000000-0000-0000-0000-000000000000';
 }
 
 // ─── Tab switching ─────────────────────────────────────────────────────────────
@@ -148,30 +138,9 @@ async function previewChatList() {
   }
 }
 
-// ─── Sign in / out ────────────────────────────────────────────────────────────
-$('btnSignIn').addEventListener('click', async () => {
-  $('btnSignIn').disabled = true;
-  $('btnSignIn').textContent = '登入中…';
-  try {
-    await chrome.runtime.sendMessage({ type: 'SIGN_IN' });
-    await refreshAuthUI();
-    await previewChatList();
-    showToast('登入成功', 'success');
-  } catch (e) {
-    showToast('登入失敗: ' + e.message, 'error');
-  } finally {
-    $('btnSignIn').disabled = false;
-    $('btnSignIn').textContent = '使用 Google 帳號登入';
-  }
-});
-
-$('btnSignOut').addEventListener('click', async () => {
-  await chrome.runtime.sendMessage({ type: 'SIGN_OUT' });
-  await refreshAuthUI();
-  $('chatList').innerHTML = '<div class="empty">登入後點擊「立即提取並同步」</div>';
-  $('chatCount').textContent = '—';
-  showToast('已登出');
-});
+// -- 測試階段：登入 / 登出功能暫時停用 --
+// $('btnSignIn').addEventListener('click', async () => { ... });
+// $('btnSignOut').addEventListener('click', async () => { ... });
 
 // ─── Manual sync ──────────────────────────────────────────────────────────────
 $('btnSync').addEventListener('click', async () => {
