@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg0:    #1a1b26;
+      --bg1:    #24283b;
+      --bg2:    #2f3549;
+      --bg3:    #3b4068;
+      --accent: #7aa2f7;
+      --green:  #9ece6a;
+      --red:    #f7768e;
+      --yellow: #e0af68;
+      --text:   #c0caf5;
+      --dim:    #565f89;
+      --border: #3b4068;
+      --radius: 6px;
+      --font:   'JetBrains Mono', 'Consolas', monospace;
+    }
+
+    html { width: 360px; }
+
+    body {
+      width: 360px;
+      background: var(--bg0);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+      line-height: 1.5;
+      min-height: 480px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+    }
+    .logo span { color: var(--dim); font-weight: 400; }
+
+    /* ── Tab bar ── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1;
+      padding: 7px 0;
+      text-align: center;
+      cursor: pointer;
+      font-size: 11px;
+      font-family: var(--font);
+      color: var(--dim);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Pages ── */
+    .page { display: none; padding: 12px 14px; }
+    .page.active { display: block; }
+
+    /* ── Auth section ── */
+    .user-card {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+    }
+    .user-card .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .user-email { font-size: 11px; color: var(--text); }
+    .badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .badge.online  { background: #1a2f1a; color: var(--green); }
+    .badge.offline { background: #2f1a1a; color: var(--red); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 500;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { opacity: 0.7; }
+    .btn-primary  { background: var(--accent); color: var(--bg0); }
+    .btn-ghost    { background: var(--bg2); color: var(--text); }
+    .btn-danger   { background: #2f1a1a; color: var(--red); border: 1px solid #4a2020; }
+    .btn-full     { width: 100%; justify-content: center; padding: 8px; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Sync status ── */
+    .sync-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      margin-bottom: 8px;
+    }
+    .sync-label { color: var(--dim); font-size: 10px; }
+    .sync-val   { color: var(--text); font-size: 11px; }
+
+    /* ── Chat list ── */
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .list-header .count { color: var(--dim); font-size: 10px; }
+    .chat-list {
+      max-height: 260px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .chat-list::-webkit-scrollbar { width: 4px; }
+    .chat-list::-webkit-scrollbar-track { background: var(--bg1); }
+    .chat-list::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+    .chat-item {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chat-item:last-child { border-bottom: none; }
+    .chat-item:hover { background: var(--bg2); }
+    .empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--dim);
+      font-size: 11px;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%) translateY(40px);
+      background: var(--bg3);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      opacity: 0;
+      transition: transform 0.2s, opacity 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.success { color: var(--green); }
+    .toast.error   { color: var(--red); }
+
+    /* ── Settings page ── */
+    .section-label {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    .platform-row {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+    .platform-header {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      cursor: pointer;
+      user-select: none;
+      gap: 8px;
+    }
+    .platform-header:hover { background: var(--bg2); }
+    .platform-name { flex: 1; font-size: 11px; font-weight: 500; }
+    .platform-toggle {
+      width: 28px;
+      height: 15px;
+      background: var(--bg3);
+      border-radius: 8px;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .platform-toggle.on { background: var(--accent); }
+    .platform-toggle::after {
+      content: '';
+      position: absolute;
+      width: 11px;
+      height: 11px;
+      background: var(--text);
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+    }
+    .platform-toggle.on::after { transform: translateX(13px); }
+    .chevron {
+      font-size: 10px;
+      color: var(--dim);
+      transition: transform 0.2s;
+    }
+    .chevron.open { transform: rotate(90deg); }
+
+    .platform-body {
+      display: none;
+      padding: 0 10px 10px;
+      border-top: 1px solid var(--border);
+    }
+    .platform-body.open { display: block; }
+
+    .input-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      align-items: center;
+    }
+    .selector-input {
+      flex: 1;
+      background: var(--bg0);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 11px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .selector-input:focus { border-color: var(--accent); }
+    .char-count { font-size: 10px; color: var(--dim); min-width: 24px; text-align: right; }
+
+    .input-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--dim);
+    }
+    .test-result {
+      margin-top: 6px;
+      font-size: 10px;
+      padding: 4px 8px;
+      background: var(--bg0);
+      border-radius: 4px;
+      border-left: 2px solid var(--accent);
+      display: none;
+    }
+    .test-result.show { display: block; }
+    .test-result.error { border-left-color: var(--red); color: var(--red); }
+
+    /* custom platform add form */
+    .add-form {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      margin-top: 6px;
+      display: none;
+    }
+    .add-form.open { display: block; }
+    .add-form .field { margin-bottom: 8px; }
+    .field-label { font-size: 10px; color: var(--dim); margin-bottom: 3px; }
+    .text-input {
+      width: 100%;
+      background: var(--bg0);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 11px;
+      outline: none;
+    }
+    .text-input:focus { border-color: var(--accent); }
+
+    /* interval */
+    .interval-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+    }
+    .interval-row label { flex: 1; font-size: 11px; }
+    .interval-input {
+      width: 52px;
+      background: var(--bg0);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px 6px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 11px;
+      text-align: center;
+      outline: none;
+    }
+    .interval-input:focus { border-color: var(--accent); }
+    .interval-unit { font-size: 10px; color: var(--dim); }
+
+    /* reset row */
+    .reset-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+    }
+    .reset-row span { font-size: 11px; color: var(--dim); }
+
+    /* about */
+    .about-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .about-row:last-child { border-bottom: none; }
+    .about-key { color: var(--dim); }
+    .about-val { color: var(--text); font-size: 10px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">chat<span>.</span>extractor</div>
+    <div id="headerStatus" class="badge offline">offline</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="main">主頁</button>
+    <button class="tab" data-tab="settings">設定</button>
+    <button class="tab" data-tab="about">關於</button>
+  </div>
+
+  <!-- ══ MAIN PAGE ══ -->
+  <div class="page active" id="tab-main">
+
+    <!-- Auth -->
+    <div id="authSection">
+      <div id="loggedOut">
+        <button class="btn btn-primary btn-full" id="btnSignIn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+          </svg>
+          使用 Google 帳號登入
+        </button>
+      </div>
+      <div id="loggedIn" style="display:none">
+        <div class="user-card">
+          <div class="row">
+            <div class="user-email" id="userEmail">—</div>
+            <button class="btn btn-ghost" id="btnSignOut" style="font-size:10px;padding:3px 8px">登出</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sync status -->
+    <div class="sync-row">
+      <div>
+        <div class="sync-label">最後同步</div>
+        <div class="sync-val" id="lastSync">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sync-label">本次提取</div>
+        <div class="sync-val" id="syncCount">—</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-full" id="btnSync" disabled style="margin-bottom:10px">
+      立即提取並同步
+    </button>
+
+    <!-- Chat list preview -->
+    <div class="list-header">
+      <div style="font-size:10px;color:var(--dim)">當前頁面對話列表</div>
+      <div class="count" id="chatCount">—</div>
+    </div>
+    <div class="chat-list" id="chatList">
+      <div class="empty">登入後點擊「立即提取並同步」</div>
+    </div>
+
+  </div>
+
+  <!-- ══ SETTINGS PAGE ══ -->
+  <div class="page" id="tab-settings">
+
+    <div class="section-label">同步頻率</div>
+    <div class="interval-row">
+      <label>自動同步間隔</label>
+      <input class="interval-input" type="number" id="intervalInput" min="1" max="60" value="3" />
+      <span class="interval-unit">分鐘</span>
+    </div>
+
+    <div class="section-label">平台提取規則</div>
+    <div id="platformList"></div>
+
+    <div class="section-label">自訂網站</div>
+    <div id="customList"></div>
+    <button class="btn btn-ghost btn-full" id="btnAddCustom" style="margin-top:6px">
+      + 新增自訂網站
+    </button>
+    <div class="add-form" id="addForm">
+      <div class="field">
+        <div class="field-label">名稱</div>
+        <input class="text-input" id="customName" placeholder="e.g. DeepSeek" />
+      </div>
+      <div class="field">
+        <div class="field-label">網址匹配 (glob)</div>
+        <input class="text-input" id="customMatch" placeholder="https://chat.deepseek.com/*" />
+      </div>
+      <div class="field">
+        <div class="field-label">Base URL</div>
+        <input class="text-input" id="customBaseUrl" placeholder="https://chat.deepseek.com" />
+      </div>
+      <div class="field">
+        <div class="field-label">CSS Selector</div>
+        <input class="text-input" id="customSelector" placeholder="a.sidebar-link .title" />
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <button class="btn btn-primary" id="btnSaveCustom" style="flex:1">新增</button>
+        <button class="btn btn-ghost" id="btnCancelCustom">取消</button>
+      </div>
+    </div>
+
+    <div class="section-label">重置</div>
+    <div class="reset-row">
+      <span>還原全部為預設值</span>
+      <button class="btn btn-danger" id="btnReset">一鍵還原</button>
+    </div>
+
+  </div>
+
+  <!-- ══ ABOUT PAGE ══ -->
+  <div class="page" id="tab-about">
+    <div class="section-label">擴展資訊</div>
+    <div style="background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;">
+      <div class="about-row">
+        <span class="about-key">名稱</span>
+        <span class="about-val">Chat Title Extractor</span>
+      </div>
+      <div class="about-row">
+        <span class="about-key">版本</span>
+        <span class="about-val">1.0.0</span>
+      </div>
+      <div class="about-row">
+        <span class="about-key">Extension UUID</span>
+        <span class="about-val" id="aboutUUID" style="font-size:9px">—</span>
+      </div>
+      <div class="about-row">
+        <span class="about-key">User ID</span>
+        <span class="about-val" id="aboutUID" style="font-size:9px">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

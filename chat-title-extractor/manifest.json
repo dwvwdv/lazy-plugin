@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Chat Title Extractor",
+  "version": "1.0.0",
+  "description": "Extract chat titles from AI platforms and sync to Supabase",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "alarms",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://claude.ai/*",
+    "https://chatgpt.com/*",
+    "https://gemini.google.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Chat Title Extractor"
+  },
+  "oauth2": {
+    "client_id": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": ["openid", "email", "profile"]
+  }
+}
